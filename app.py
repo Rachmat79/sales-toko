@@ -510,7 +510,8 @@ def sidebar_generate_section():
 
     st.sidebar.caption(
         "Aplikasi otomatis mencari file data (.xlsx / .xls / .csv) TERBARU "
-        "di folder Downloads komputer Anda. Tidak perlu pilih file manual."
+        "di folder Downloads komputer Anda (untuk penggunaan lokal). "
+        "Untuk penggunaan online, gunakan opsi Upload Manual di bawah."
     )
 
     generate_clicked = st.sidebar.button(
@@ -542,6 +543,60 @@ def sidebar_generate_section():
             """
         )
 
+    # ---------------------------------------------------------------
+    # FALLBACK: Upload Manual
+    # ---------------------------------------------------------------
+    # PENTING: fitur Generate (auto-detect folder Downloads/Desktop/Documents)
+    # HANYA bekerja saat aplikasi dijalankan di komputer yang SAMA dengan
+    # browser (mis. `streamlit run app.py` di localhost). Saat aplikasi
+    # di-deploy ONLINE (Streamlit Community Cloud, server, container, dsb),
+    # kode Python berjalan di FILESYSTEM SERVER — bukan filesystem komputer
+    # pengguna — sehingga folder Downloads yang di-scan adalah milik server
+    # (contoh: /home/appuser/Downloads) dan hampir pasti kosong. Ini
+    # keterbatasan arsitektur web (browser tidak mengizinkan aplikasi
+    # membaca filesystem lokal pengguna secara langsung), bukan bug.
+    #
+    # Upload manual di bawah ini menjadi jalur alternatif yang selalu
+    # berfungsi di kondisi apa pun (localhost maupun online), tanpa
+    # mengubah cara kerja fitur Generate itu sendiri.
+    with st.sidebar.expander(
+        "📤 Upload Manual (untuk deployment online)",
+        expanded=(info is None),
+    ):
+        st.caption(
+            "Gunakan ini jika aplikasi diakses secara online — server tidak "
+            "bisa membaca folder Downloads di komputer Anda, jadi file perlu "
+            "diupload langsung."
+        )
+        uploaded_fallback = st.file_uploader(
+            "Pilih file Excel (.xlsx/.xls) atau CSV",
+            type=["xlsx", "xls", "csv"],
+            key="manual_upload_fallback",
+        )
+        if uploaded_fallback is not None:
+            try:
+                sheets = load_workbook_sheets(uploaded_fallback.getvalue(), uploaded_fallback.name)
+            except Exception as e:
+                st.error(f"❌ Gagal membaca file: {e}")
+            else:
+                if not sheets:
+                    st.error("❌ File tidak memiliki sheet/data yang valid.")
+                else:
+                    now = datetime.now()
+                    suffix = Path(uploaded_fallback.name).suffix.lower()
+                    st.session_state.generated_file = {
+                        "path": f"(diupload manual: {uploaded_fallback.name})",
+                        "name": uploaded_fallback.name,
+                        "mtime": now.timestamp(),
+                        "modified_str": now.strftime("%d %B %Y %H:%M"),
+                        "format_label": FORMAT_LABELS.get(suffix, suffix),
+                        "directory": "(manual upload)",
+                    }
+                    st.session_state.sheets_cache = sheets
+                    st.session_state.load_error = None
+                    st.session_state.generate_ran_once = True
+                    st.success(f"✓ File '{uploaded_fallback.name}' berhasil dimuat.")
+
 
 def render_welcome_screen():
     """Tampilan awal sebelum ada data — Generate hanya berjalan saat tombol diklik."""
@@ -569,10 +624,15 @@ def render_generate_error(error_info: dict):
     if error_type == "no_file":
         searched = "\n".join(f"- `{d}`" for d in DOWNLOAD_DIRECTORIES)
         st.warning(
-            "⚠️ **Tidak ditemukan file Excel atau CSV.**\n\n"
+            "⚠️ **Tidak ditemukan file Excel atau CSV di komputer server.**\n\n"
             "Silakan pastikan file `.xlsx`, `.xls`, atau `.csv` sudah tersedia "
-            "di salah satu folder berikut, lalu klik **Refresh**:\n\n"
-            f"{searched}"
+            "di salah satu folder berikut (untuk penggunaan **lokal**), lalu "
+            "klik **Refresh**:\n\n"
+            f"{searched}\n\n"
+            "💡 **Menjalankan aplikasi ini secara online?** Auto-detect folder "
+            "TIDAK bisa mengakses komputer Anda dari server. Gunakan panel "
+            "**📤 Upload Manual (untuk deployment online)** di sidebar untuk "
+            "mengunggah file secara langsung."
         )
         return
 
