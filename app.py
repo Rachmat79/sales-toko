@@ -38,6 +38,99 @@ BG_CARD = "#F4F6F8"
 POSITIVE_COLOR = "#1E8449"
 NEGATIVE_COLOR = "#C0392B"
 
+# =========================================================
+# STYLE GLOBAL — TIPOGRAFI PRESISI & GLASS HEADER
+# =========================================================
+# Catatan: blok CSS ini MURNI kosmetik (font-size, spacing, efek glass).
+# Tidak menyentuh logika, kalkulasi, atau struktur data apa pun.
+# h1 TIDAK di-override secara blanket agar ukuran font Display Mode (TV) —
+# yang memang sengaja dibuat besar untuk dibaca dari jarak jauh — tidak ikut
+# mengecil (mempertahankan fitur existing).
+
+GLOBAL_TYPOGRAPHY_CSS = """
+<style>
+/* ---------- Font family modern & konsisten ---------- */
+html, body, [class*="css"], .stApp {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
+                 Helvetica, Arial, sans-serif !important;
+}
+
+/* ---------- Heading sekunder (bukan judul utama h1) ---------- */
+h2 { font-size: 1.08rem !important; font-weight: 700 !important; letter-spacing: -0.01em; }
+h3 { font-size: 0.98rem !important; font-weight: 650 !important; }
+h4 { font-size: 0.90rem !important; font-weight: 650 !important; }
+
+section[data-testid="stSidebar"] h2 {
+    font-size: 0.95rem !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+}
+
+/* ---------- Label & teks widget sidebar ---------- */
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] .stMarkdown p {
+    font-size: 0.80rem !important;
+}
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+    font-size: 0.73rem !important;
+    line-height: 1.35 !important;
+}
+
+/* ---------- Caption umum ---------- */
+[data-testid="stCaptionContainer"] { font-size: 0.78rem !important; }
+
+/* ---------- Button ---------- */
+.stButton > button, .stDownloadButton > button {
+    font-size: 0.83rem !important;
+    font-weight: 600 !important;
+    padding: 0.45rem 1rem !important;
+    border-radius: 8px !important;
+}
+
+/* ---------- Tabs ---------- */
+.stTabs [data-baseweb="tab-list"] { gap: 4px; }
+.stTabs [data-baseweb="tab"] {
+    font-size: 0.83rem !important;
+    font-weight: 600 !important;
+    padding: 8px 14px !important;
+}
+
+/* ---------- Tabel / dataframe ---------- */
+[data-testid="stDataFrame"] * { font-size: 0.80rem !important; }
+
+/* ---------- st.metric (dipakai pada tab MTD Sales) ---------- */
+[data-testid="stMetricValue"] { font-size: 1.2rem !important; }
+[data-testid="stMetricLabel"] { font-size: 0.78rem !important; }
+
+/* ---------- Input / selectbox label ---------- */
+.stSelectbox label, .stMultiSelect label, .stDateInput label,
+.stTextInput label, .stNumberInput label, .stRadio label {
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+}
+
+/* ---------- Expander header ---------- */
+[data-testid="stExpander"] summary p { font-size: 0.85rem !important; font-weight: 600 !important; }
+
+/* ---------- GLASS HEADER (morphglass bening) ---------- */
+.app-header-glass {
+    background: linear-gradient(135deg, rgba(255,255,255,0.70), rgba(228,241,255,0.50));
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.75);
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(31,78,121,0.10), inset 0 1px 0 rgba(255,255,255,0.55);
+    padding: 20px 28px;
+    margin-bottom: 18px;
+}
+</style>
+"""
+
+
+def inject_global_css():
+    """Suntik CSS tipografi & glass header. Dipanggil sekali di awal main()."""
+    st.markdown(GLOBAL_TYPOGRAPHY_CSS, unsafe_allow_html=True)
+
 # Kandidat nama kolom yang umum dipakai pada data sales retail.
 # Digunakan untuk MENYARANKAN mapping kolom, TIDAK untuk mengarang data.
 SALES_CANDIDATES = [
@@ -454,11 +547,11 @@ def render_welcome_screen():
     """Tampilan awal sebelum ada data — Generate hanya berjalan saat tombol diklik."""
     st.markdown(
         f"""
-        <div style="text-align:center; padding:80px 20px;">
-            <h1 style="color:{PRIMARY_COLOR};">📊 Sales Display Analyzer</h1>
-            <p style="color:#5D6D7E; font-size:18px;">Executive Sales Performance Dashboard</p>
-            <p style="color:#AEB6BF; font-size:13px; margin-top:2px;">Author : Rachmat Hidayat</p>
-            <p style="color:#85929E; margin-top:30px;">
+        <div class="app-header-glass" style="text-align:center; padding:56px 24px;">
+            <h1 style="color:{PRIMARY_COLOR}; font-size:26px; font-weight:800; margin-bottom:4px;">📊 Sales Display Analyzer</h1>
+            <p style="color:#5D6D7E; font-size:14px; margin:0;">Executive Sales Performance Dashboard</p>
+            <p style="color:#AEB6BF; font-size:11.5px; margin-top:3px;">Author : Rachmat Hidayat</p>
+            <p style="color:#85929E; font-size:13px; margin-top:24px;">
                 👈 Klik tombol <b>⚡ GENERATE DATA</b> pada sidebar untuk mencari dan
                 menganalisis file data (.xlsx / .xls / .csv) terbaru secara otomatis
                 dari folder Downloads Anda.
@@ -768,10 +861,10 @@ def render_kpi_cards(df, sales_col, category_col, store_col, cat_summary):
         with cols[i % 3]:
             st.markdown(
                 f"""
-                <div style="background-color:{BG_CARD}; padding:18px 16px; border-radius:12px;
-                            border-left:5px solid {PRIMARY_COLOR}; margin-bottom:16px;">
-                    <div style="font-size:13px; color:#5D6D7E; font-weight:600;">{label}</div>
-                    <div style="font-size:22px; color:{PRIMARY_COLOR}; font-weight:700; margin-top:4px;">
+                <div style="background-color:{BG_CARD}; padding:15px 14px; border-radius:11px;
+                            border-left:4px solid {PRIMARY_COLOR}; margin-bottom:14px;">
+                    <div style="font-size:11.5px; color:#5D6D7E; font-weight:650; letter-spacing:0.01em;">{label}</div>
+                    <div style="font-size:19px; color:{PRIMARY_COLOR}; font-weight:750; margin-top:3px;">
                         {value}
                     </div>
                 </div>
@@ -1089,10 +1182,10 @@ def render_dashboard_mode(df, sales_col, category_col, category_code_col, store_
 
     st.markdown(
         f"""
-        <div style="padding:14px 0 6px 0;">
-            <h1 style="color:{PRIMARY_COLOR}; margin-bottom:0;">📊 Sales Display Analyzer</h1>
-            <p style="color:#5D6D7E; margin-top:2px;">Executive Sales Performance Dashboard</p>
-            <p style="color:#AEB6BF; font-size:13px; margin-top:2px;">Author : Rachmat Hidayat</p>
+        <div class="app-header-glass" style="padding:16px 24px;">
+            <h1 style="color:{PRIMARY_COLOR}; font-size:24px; font-weight:800; margin-bottom:2px;">📊 Sales Display Analyzer</h1>
+            <p style="color:#5D6D7E; font-size:13.5px; margin:0;">Executive Sales Performance Dashboard</p>
+            <p style="color:#AEB6BF; font-size:11.5px; margin-top:2px;">Author : Rachmat Hidayat</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1267,7 +1360,7 @@ def render_display_mode(df, sales_col, category_col, store_col, date_col):
 
     st.markdown(
         f"""
-        <div style="text-align:center; padding:10px 0 20px 0;">
+        <div class="app-header-glass" style="text-align:center; padding:22px 20px;">
             <h1 style="color:{PRIMARY_COLOR}; font-size:44px; margin-bottom:0;">SALES PERFORMANCE REPORT</h1>
             <p style="color:#5D6D7E; font-size:18px;">{datetime.now().strftime('%A, %d %B %Y — %H:%M')}</p>
         </div>
@@ -1319,6 +1412,7 @@ def render_display_mode(df, sales_col, category_col, store_col, date_col):
 # =========================================================
 
 def main():
+    inject_global_css()
     init_session_state()
     sidebar_generate_section()
 
