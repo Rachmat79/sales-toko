@@ -486,6 +486,35 @@ def run_generate_process():
     st.session_state.generate_ran_once = True
 
 
+def _process_manual_upload(uploaded_file):
+    """Proses file hasil upload manual, simpan ke session_state (jalur fallback).
+    Fungsi bersama dipakai baik oleh panel sidebar maupun panel area utama."""
+    try:
+        sheets = load_workbook_sheets(uploaded_file.getvalue(), uploaded_file.name)
+    except Exception as e:
+        st.error(f"❌ Gagal membaca file: {e}")
+        return
+    if not sheets:
+        st.error("❌ File tidak memiliki sheet/data yang valid.")
+        return
+
+    now = datetime.now()
+    suffix = Path(uploaded_file.name).suffix.lower()
+    st.session_state.generated_file = {
+        "path": f"(diupload manual: {uploaded_file.name})",
+        "name": uploaded_file.name,
+        "mtime": now.timestamp(),
+        "modified_str": now.strftime("%d %B %Y %H:%M"),
+        "format_label": FORMAT_LABELS.get(suffix, suffix),
+        "directory": "(manual upload)",
+    }
+    st.session_state.sheets_cache = sheets
+    st.session_state.load_error = None
+    st.session_state.generate_ran_once = True
+    st.success(f"✓ File '{uploaded_file.name}' berhasil dimuat.")
+    st.rerun()
+
+
 def sidebar_generate_section():
     """Panel sidebar untuk fitur Generate — menggantikan file_uploader manual."""
     st.sidebar.markdown("## ⚡ Sumber Data")
@@ -571,31 +600,10 @@ def sidebar_generate_section():
         uploaded_fallback = st.file_uploader(
             "Pilih file Excel (.xlsx/.xls) atau CSV",
             type=["xlsx", "xls", "csv"],
-            key="manual_upload_fallback",
+            key="manual_upload_fallback_sidebar",
         )
         if uploaded_fallback is not None:
-            try:
-                sheets = load_workbook_sheets(uploaded_fallback.getvalue(), uploaded_fallback.name)
-            except Exception as e:
-                st.error(f"❌ Gagal membaca file: {e}")
-            else:
-                if not sheets:
-                    st.error("❌ File tidak memiliki sheet/data yang valid.")
-                else:
-                    now = datetime.now()
-                    suffix = Path(uploaded_fallback.name).suffix.lower()
-                    st.session_state.generated_file = {
-                        "path": f"(diupload manual: {uploaded_fallback.name})",
-                        "name": uploaded_fallback.name,
-                        "mtime": now.timestamp(),
-                        "modified_str": now.strftime("%d %B %Y %H:%M"),
-                        "format_label": FORMAT_LABELS.get(suffix, suffix),
-                        "directory": "(manual upload)",
-                    }
-                    st.session_state.sheets_cache = sheets
-                    st.session_state.load_error = None
-                    st.session_state.generate_ran_once = True
-                    st.success(f"✓ File '{uploaded_fallback.name}' berhasil dimuat.")
+            _process_manual_upload(uploaded_fallback)
 
 
 def render_welcome_screen():
@@ -630,10 +638,22 @@ def render_generate_error(error_info: dict):
             "klik **Refresh**:\n\n"
             f"{searched}\n\n"
             "💡 **Menjalankan aplikasi ini secara online?** Auto-detect folder "
-            "TIDAK bisa mengakses komputer Anda dari server. Gunakan panel "
-            "**📤 Upload Manual (untuk deployment online)** di sidebar untuk "
-            "mengunggah file secara langsung."
+            "TIDAK bisa mengakses komputer Anda dari server. Upload file "
+            "langsung di bawah ini 👇"
         )
+        st.markdown("#### 📤 Upload Manual")
+        st.caption(
+            "Cara ini selalu berfungsi baik di localhost maupun saat aplikasi "
+            "diakses online — pilih file dari komputer Anda untuk langsung "
+            "dianalisis."
+        )
+        uploaded_main = st.file_uploader(
+            "Pilih file Excel (.xlsx/.xls) atau CSV",
+            type=["xlsx", "xls", "csv"],
+            key="manual_upload_fallback_main",
+        )
+        if uploaded_main is not None:
+            _process_manual_upload(uploaded_main)
         return
 
     file_name = error_info.get("file_name", "-")
