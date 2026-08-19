@@ -49,68 +49,95 @@ NEGATIVE_COLOR = "#C0392B"
 
 GLOBAL_TYPOGRAPHY_CSS = """
 <style>
+/* ---------- Kunci root font-size (deterministik, imun terhadap perbedaan
+   rendering antara localhost vs Streamlit Cloud) ---------- */
+html { font-size: 16px !important; }
+
 /* ---------- Font family modern & konsisten ---------- */
 html, body, [class*="css"], .stApp {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
                  Helvetica, Arial, sans-serif !important;
 }
 
-/* ---------- Heading sekunder (bukan judul utama h1) ---------- */
-h2 { font-size: 1.08rem !important; font-weight: 700 !important; letter-spacing: -0.01em; }
-h3 { font-size: 0.98rem !important; font-weight: 650 !important; }
-h4 { font-size: 0.90rem !important; font-weight: 650 !important; }
+/* ---------- Batasi lebar konten agar tidak "melar" di layar/viewport lebar
+   (mencegah kesan UI membesar saat window browser online lebih lebar) ---------- */
+.block-container {
+    max-width: 1280px !important;
+    padding-top: 1.5rem !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+}
+
+/* ---------- Kunci lebar sidebar ke ukuran tetap (px, bukan relatif) ---------- */
+section[data-testid="stSidebar"] {
+    min-width: 255px !important;
+    max-width: 255px !important;
+    width: 255px !important;
+}
+section[data-testid="stSidebar"] > div {
+    width: 255px !important;
+}
+
+/* ---------- Heading sekunder (bukan judul utama h1) — unit PX agar pasti ---------- */
+h2 { font-size: 17px !important; font-weight: 700 !important; letter-spacing: -0.01em; }
+h3 { font-size: 15.5px !important; font-weight: 650 !important; }
+h4 { font-size: 14px !important; font-weight: 650 !important; }
 
 section[data-testid="stSidebar"] h2 {
-    font-size: 0.95rem !important;
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.25rem !important;
+    font-size: 14.5px !important;
+    margin-top: 8px !important;
+    margin-bottom: 4px !important;
 }
 
 /* ---------- Label & teks widget sidebar ---------- */
 section[data-testid="stSidebar"] label,
 section[data-testid="stSidebar"] .stMarkdown p {
-    font-size: 0.80rem !important;
+    font-size: 12.5px !important;
 }
 section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
-    font-size: 0.73rem !important;
+    font-size: 11px !important;
     line-height: 1.35 !important;
 }
 
 /* ---------- Caption umum ---------- */
-[data-testid="stCaptionContainer"] { font-size: 0.78rem !important; }
+[data-testid="stCaptionContainer"] { font-size: 12px !important; }
 
 /* ---------- Button ---------- */
 .stButton > button, .stDownloadButton > button {
-    font-size: 0.83rem !important;
+    font-size: 12.5px !important;
     font-weight: 600 !important;
-    padding: 0.45rem 1rem !important;
+    padding: 6px 14px !important;
     border-radius: 8px !important;
 }
 
 /* ---------- Tabs ---------- */
 .stTabs [data-baseweb="tab-list"] { gap: 4px; }
 .stTabs [data-baseweb="tab"] {
-    font-size: 0.83rem !important;
+    font-size: 12.5px !important;
     font-weight: 600 !important;
-    padding: 8px 14px !important;
+    padding: 7px 13px !important;
 }
 
 /* ---------- Tabel / dataframe ---------- */
-[data-testid="stDataFrame"] * { font-size: 0.80rem !important; }
+[data-testid="stDataFrame"] * { font-size: 12.5px !important; }
 
 /* ---------- st.metric (dipakai pada tab MTD Sales) ---------- */
-[data-testid="stMetricValue"] { font-size: 1.2rem !important; }
-[data-testid="stMetricLabel"] { font-size: 0.78rem !important; }
+[data-testid="stMetricValue"] { font-size: 18px !important; }
+[data-testid="stMetricLabel"] { font-size: 12px !important; }
 
 /* ---------- Input / selectbox label ---------- */
 .stSelectbox label, .stMultiSelect label, .stDateInput label,
 .stTextInput label, .stNumberInput label, .stRadio label {
-    font-size: 0.82rem !important;
+    font-size: 12.5px !important;
     font-weight: 600 !important;
+}
+.stSelectbox div[data-baseweb="select"] * ,
+.stMultiSelect div[data-baseweb="select"] * {
+    font-size: 12.5px !important;
 }
 
 /* ---------- Expander header ---------- */
-[data-testid="stExpander"] summary p { font-size: 0.85rem !important; font-weight: 600 !important; }
+[data-testid="stExpander"] summary p { font-size: 13px !important; font-weight: 600 !important; }
 
 /* ---------- GLASS HEADER (morphglass bening) ---------- */
 .app-header-glass {
@@ -120,8 +147,8 @@ section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
     border: 1px solid rgba(255,255,255,0.75);
     border-radius: 18px;
     box-shadow: 0 8px 24px rgba(31,78,121,0.10), inset 0 1px 0 rgba(255,255,255,0.55);
-    padding: 20px 28px;
-    margin-bottom: 18px;
+    padding: 18px 26px;
+    margin-bottom: 16px;
 }
 </style>
 """
@@ -610,11 +637,11 @@ def render_welcome_screen():
     """Tampilan awal sebelum ada data — Generate hanya berjalan saat tombol diklik."""
     st.markdown(
         f"""
-        <div class="app-header-glass" style="text-align:center; padding:56px 24px;">
-            <h1 style="color:{PRIMARY_COLOR}; font-size:26px; font-weight:800; margin-bottom:4px;">📊 Sales Display Analyzer</h1>
-            <p style="color:#5D6D7E; font-size:14px; margin:0;">Executive Sales Performance Dashboard</p>
-            <p style="color:#AEB6BF; font-size:11.5px; margin-top:3px;">Author : Rachmat Hidayat</p>
-            <p style="color:#85929E; font-size:13px; margin-top:24px;">
+        <div class="app-header-glass" style="text-align:center; padding:40px 24px;">
+            <h1 style="color:{PRIMARY_COLOR}; font-size:21px; font-weight:800; margin-bottom:4px;">📊 Sales Display Analyzer</h1>
+            <p style="color:#5D6D7E; font-size:12.5px; margin:0;">Executive Sales Performance Dashboard</p>
+            <p style="color:#AEB6BF; font-size:10.5px; margin-top:3px;">Author : Rachmat Hidayat</p>
+            <p style="color:#85929E; font-size:12px; margin-top:20px;">
                 👈 Klik tombol <b>⚡ GENERATE DATA</b> pada sidebar untuk mencari dan
                 menganalisis file data (.xlsx / .xls / .csv) terbaru secara otomatis
                 dari folder Downloads Anda.
@@ -941,10 +968,10 @@ def render_kpi_cards(df, sales_col, category_col, store_col, cat_summary):
         with cols[i % 3]:
             st.markdown(
                 f"""
-                <div style="background-color:{BG_CARD}; padding:15px 14px; border-radius:11px;
-                            border-left:4px solid {PRIMARY_COLOR}; margin-bottom:14px;">
-                    <div style="font-size:11.5px; color:#5D6D7E; font-weight:650; letter-spacing:0.01em;">{label}</div>
-                    <div style="font-size:19px; color:{PRIMARY_COLOR}; font-weight:750; margin-top:3px;">
+                <div style="background-color:{BG_CARD}; padding:12px 13px; border-radius:10px;
+                            border-left:4px solid {PRIMARY_COLOR}; margin-bottom:12px;">
+                    <div style="font-size:10.5px; color:#5D6D7E; font-weight:650; letter-spacing:0.01em;">{label}</div>
+                    <div style="font-size:16.5px; color:{PRIMARY_COLOR}; font-weight:750; margin-top:3px;">
                         {value}
                     </div>
                 </div>
@@ -1262,10 +1289,10 @@ def render_dashboard_mode(df, sales_col, category_col, category_code_col, store_
 
     st.markdown(
         f"""
-        <div class="app-header-glass" style="padding:16px 24px;">
-            <h1 style="color:{PRIMARY_COLOR}; font-size:24px; font-weight:800; margin-bottom:2px;">📊 Sales Display Analyzer</h1>
-            <p style="color:#5D6D7E; font-size:13.5px; margin:0;">Executive Sales Performance Dashboard</p>
-            <p style="color:#AEB6BF; font-size:11.5px; margin-top:2px;">Author : Rachmat Hidayat</p>
+        <div class="app-header-glass" style="padding:14px 22px;">
+            <h1 style="color:{PRIMARY_COLOR}; font-size:19px; font-weight:800; margin-bottom:2px;">📊 Sales Display Analyzer</h1>
+            <p style="color:#5D6D7E; font-size:12px; margin:0;">Executive Sales Performance Dashboard</p>
+            <p style="color:#AEB6BF; font-size:10.5px; margin-top:2px;">Author : Rachmat Hidayat</p>
         </div>
         """,
         unsafe_allow_html=True,
